@@ -1,0 +1,122 @@
+import { useState, useEffect, useRef, use } from 'react'
+import './App.css'
+import axios from 'axios'
+import { JSX } from 'react/jsx-runtime'
+import SignUp from './SignUp'
+import Login from './Login'
+
+type User = {
+  email: string,
+  pass: string
+}
+
+function App(): JSX.Element {
+  const [user, setUser] = useState<User | null>(null)
+  const [hasAcc, setHasAcc] = useState<boolean>(false)
+  const [logged, setLogged] = useState<boolean>(false)
+  
+  useEffect(() => {
+    const checkAcc = async () => {
+      const response = await axios.get<User[]>("http://localhost:8080/user")
+      if (response.data.length > 0) {
+        setHasAcc(true)
+        setUser(response.data[0])
+      }
+      console.log(response.data);
+      console.log(user)
+    }
+    checkAcc()
+  }, [])
+
+  return(
+    <>
+    {hasAcc ? (
+      logged ? <h1>Welcome :)</h1> :
+      user && (
+        <Login email={user.email} pass={user.pass} setLogged={setLogged}/>
+      )
+    ) : (
+      <SignUp setUser={setUser} setHasAcc={setHasAcc}/>
+    )}
+    </>
+  )
+}
+export default App
+
+
+import { useState } from "react"
+import { JSX } from "react/jsx-runtime"
+import axios from "axios"
+
+type props ={
+    setUser: (user: {email: string, pass: string}) => void
+    setHasAcc: (acc: boolean) => void
+}
+
+export default function SignUp({setUser, setHasAcc}: props): JSX.Element {
+    const [email, setEmail] = useState<string>("")
+    const [pass, setPass] = useState<string>("")
+
+    const handleCreate = async () => {
+        const newUser = {email, pass}
+        try {
+            const response = await axios.post("http://localhost:8080/user/add", newUser)
+            setUser(newUser)
+            setHasAcc(true)
+            setEmail("")
+            setPass("")
+        } catch (error) {
+            console.error("Error Adding User", error);
+        }
+    }
+
+    return(
+        <>
+            <div className=" flex flex-col">
+                <h1 className="text-center text-2xl pt-30">Welcome! Please create your account.</h1>
+                <div className="h-screen pb-60 flex flex-col gap-2 justify-center items-center">
+                    <input className="border-2 w-70 mb-2" value={email} onChange={e=> setEmail(e.target.value)}/>
+                    <input className="border-2 w-70" value={pass} onChange={e=> setPass(e.target.value)}/>
+                    <button className="border-2 w-20 mt-3 cursor-pointer" onClick={handleCreate}>Create</button>
+                </div>
+            </div>
+        </>
+    )
+
+
+}
+
+import { useState } from "react"
+import { JSX } from "react/jsx-runtime"
+import axios from "axios"
+
+type props = {
+    email: string,
+    pass: string,
+    setLogged: (logged: boolean) => void
+}
+
+export default function Login({email, pass, setLogged}: props): JSX.Element {
+
+    const [uEmail, setUEmail] = useState<string>("")
+    const [uPass, setUPass] = useState<string>("")
+
+    const login = () => {
+        if (uEmail == email && pass == uPass){
+            setLogged(true)
+        }
+    }
+
+    return(
+        <>
+            <div className=" flex flex-col">
+                <h1 className="text-center text-2xl pt-30">Welcome! Please Log In.</h1>
+                <div className="h-screen pb-60 flex flex-col gap-2 justify-center items-center">
+                    <input className="border-2 w-70 mb-2" value={uEmail} onChange={e=> setUEmail(e.target.value)}/>
+                    <input className="border-2 w-70" value={uPass} onChange={e=> setUPass(e.target.value)}/>
+                    <button className="border-2 w-20 mt-3 cursor-pointer" onClick={login}>Log In</button>
+                </div>
+            </div>
+        </>
+    )
+}
