@@ -1,0 +1,108 @@
+package com.example.auth;
+
+import jakarta.persistence.*;
+
+import java.net.PasswordAuthentication;
+
+@Entity
+@Table(name = "Login")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String email;
+    private String pass;
+
+    public User() {}
+
+    public User(String email, String pass) {
+        this.email = email;
+        this.pass = pass;
+
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPass() {
+        return pass;
+    }
+
+    public void setPass(String pass) {
+        this.pass = pass;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+}
+
+
+package com.example.auth;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+}
+
+package com.example.auth;
+
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class UserService {
+   private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public User saveLogin(String user, String pass){
+        User newUser = new User(user, pass);
+        return userRepository.save(newUser);
+    }
+
+    public List<User> getUsers(){
+        return userRepository.findAll();
+    }
+}
+
+
+package com.example.auth;
+
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/user")
+@CrossOrigin(origins = "http://localhost:5173")
+public class UserController {
+    private final UserService userService;
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping
+    public List<User> getUsers(){
+        return userService.getUsers();
+    }
+
+    @PostMapping("/add")
+    public User saveLogin(@RequestBody User user){
+        return userService.saveLogin(user.getEmail(), user.getPass());
+    }
+}
